@@ -1,1 +1,10 @@
-{"products": [], "next_id": 1}
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "apple watch",
+      "chat_id": 5095855090
+    }
+  ],
+  "next_id": 2
+}
