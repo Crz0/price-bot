@@ -1,11 +1,6 @@
 {
   "products": [
     {
-      "id": 1,
-      "name": "apple watch",
-      "chat_id": 5095855090
-    },
-    {
       "id": 2,
       "name": "Apple Watch Series 10 46mm",
       "chat_id": 5095855090
@@ -14,7 +9,12 @@
       "id": 3,
       "name": "Apple Watch SE 2025 44mm",
       "chat_id": 5095855090
+    },
+    {
+      "id": 5,
+      "name": "ايفون 16 برو",
+      "chat_id": 5095855090
     }
   ],
-  "next_id": 4
+  "next_id": 6
 }
