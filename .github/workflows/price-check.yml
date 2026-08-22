@@ -1,0 +1,46 @@
+name: Price Check Bot
+
+on:
+  # يشتغل تلقائياً كل 30 دقيقة (عدّل الرقم حسب رغبتك -- لا تقل عن 15
+  # عشان ما نضغط على GitHub وعلى المواقع اللي نسكرابها بدون داعي)
+  schedule:
+    - cron: "*/30 * * * *"
+  # يخليك تشغّله يدوياً من تبويب Actions بالريبو (مفيد للاختبار)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # لازم عشان الـ workflow يقدر يعمل commit للـ data/
+
+concurrency:
+  group: price-check-bot
+  cancel-in-progress: false   # لا توقف تشغيلة شغالة عشان تبدأ ثانية فوقها
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_AUTHORIZED_CHAT_ID: ${{ secrets.TELEGRAM_AUTHORIZED_CHAT_ID }}
+        run: python -m bot.main
+
+      - name: Commit updated data (if any changes)
+        run: |
+          git config user.name "price-bot"
+          git config user.email "price-bot@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet && echo "لا يوجد تغييرات لحفظها" || git commit -m "تحديث بيانات الأسعار [skip ci]"
+          git push
