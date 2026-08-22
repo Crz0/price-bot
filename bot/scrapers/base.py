@@ -14,9 +14,36 @@ import requests
 from .. import config
 
 
-def fetch_html(url: str) -> str | None:
+_sessions_by_host: dict = {}
+
+
+def fetch_html(url: str, warm_up: bool = True) -> str | None:
+    """
+    يجلب HTML صفحة. لو warm_up=True (الافتراضي)، يزور الصفحة الرئيسية
+    لنفس الموقع أول مرة (بنفس الجلسة/الكوكيز) قبل الصفحة المطلوبة --
+    هذا يحاكي سلوك متصفح حقيقي (يدخل الموقع من الصفحة الرئيسية) وبعض
+    أنظمة الحماية من البوتات تتساهل أكثر مع هذا النمط.
+    """
     try:
-        resp = requests.get(url, headers=config.REQUEST_HEADERS, timeout=config.REQUEST_TIMEOUT)
+        from urllib.parse import urlparse
+
+        parsed = urlparse(url)
+        host = parsed.netloc
+
+        session = _sessions_by_host.get(host)
+        if session is None:
+            session = requests.Session()
+            session.headers.update(config.REQUEST_HEADERS)
+            _sessions_by_host[host] = session
+
+            if warm_up:
+                homepage = f"{parsed.scheme}://{host}/"
+                try:
+                    session.get(homepage, timeout=config.REQUEST_TIMEOUT)
+                except requests.RequestException:
+                    pass  # لو فشلت زيارة التسخين، نكمل ونحاول الصفحة المطلوبة بأي حال
+
+        resp = session.get(url, timeout=config.REQUEST_TIMEOUT)
         if resp.status_code != 200:
             return None
         return resp.text
